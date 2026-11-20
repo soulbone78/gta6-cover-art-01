@@ -1,23 +1,41 @@
 // Fixed scenes for screenshots: ?shot=cover shows the cover alone at its
-// export size; ?shot=editor shows the editor with sample photos loaded.
-// Query params: layout, grade, size, title, subtitle, photo (sample name).
-// window.__shotReady is set once painted.
+// export size; ?shot=editor shows the editor with the samples loaded.
+// Query knobs: layout, grade, size, title, subtitle, photos (six sample
+// names, comma-separated, one per slot), panx, pany (six numbers each).
+// window.__shotReady is set once the scene has painted.
 
-/** Loads the two sample photos and builds a four-panel state from a scene. */
+import { SAMPLE_ORDER } from './cover.js';
+
+/** Splits a comma query value into numbers, padding with `fallback`. */
+function numberList(raw, count, fallback) {
+  // Note: Number('') is 0, so a missing value must stay NaN — otherwise a
+  // query without `zoom` would shrink the first slot to nothing.
+  const parts = (raw ?? '').split(',').map((v) => (v.trim() === '' ? NaN : Number(v)));
+  return Array.from({ length: count }, (_, i) =>
+    Number.isFinite(parts[i]) ? parts[i] : fallback);
+}
+
+/** Loads the named samples and builds a six-slot scene from the query. */
 export async function runShot(shot, query, api) {
-  const layout = query.get('layout') ?? 'hero';
-  const grade = query.get('grade') ?? 'sunset';
-  const size = query.get('size') ?? 'wide';
-  const title = query.get('title') ?? 'Vice Nights';
-  const subtitle = query.get('subtitle') ?? 'One city. One last score.';
-  const photoA = await api.loadImage(`samples/${query.get('photo') ?? 'pier'}.jpg`);
-  const photoB = await api.loadImage(`samples/${query.get('photo2') ?? 'boulevard'}.jpg`);
-  // Optional per-panel vertical pan (comma list, one value per panel, empty = 0),
-  // e.g. pany=0.9,0.44,0,0.44. Positive panY shifts the photo down so a face
-  // near the top of the source photo stays inside a short/wide panel.
-  const panY = (query.get('pany') ?? '').split(',').map((v) => Number(v) || 0);
-  const panels = [photoA, photoB, photoA, photoB].map((img, i) => ({ img, zoom: 1, panX: 0, panY: panY[i] ?? 0 }));
+  const layout = query.get('layout') ?? 'classic';
+  const grade = query.get('grade') ?? 'vice';
+  const size = query.get('size') ?? 'portrait';
+  const title = query.get('title') ?? 'Vice City';
+  const subtitle = query.get('subtitle') ?? 'Every sunset has a price.';
+  const names = (query.get('photos') ?? '').split(',').filter(Boolean);
+  const picked = Array.from({ length: 6 }, (_, i) => names[i] ?? SAMPLE_ORDER[i]);
+  const images = await Promise.all(
+    picked.map((name) => api.loadImage(`samples/${name}.jpg`)),
+  );
+  const panX = numberList(query.get('panx'), 6, 0);
+  const panY = numberList(query.get('pany'), 6, 0);
+  const zoom = numberList(query.get('zoom'), 6, 1);
+  const slots = images.map((photo, i) => ({
+    photo, zoom: zoom[i], panX: panX[i], panY: panY[i],
+  }));
   if (shot === 'cover') document.body.classList.add('shot-cover');
-  api.apply({ layout, grade, size, title, subtitle, panels });
-  requestAnimationFrame(() => requestAnimationFrame(() => { window.__shotReady = true; }));
+  api.apply({ layout, grade, size, title, subtitle, slots });
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    window.__shotReady = true;
+  }));
 }

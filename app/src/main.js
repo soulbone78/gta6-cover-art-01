@@ -1,45 +1,47 @@
-// Wires the Neon Palms editor: layout / grade / size buttons, caption fields,
-// per-panel photo loading with zoom and pan (sliders, drag, wheel), panel
-// selection by clicking the preview, and PNG export at the chosen size.
-// A `?shot=` query sets up a fixed scene for a screenshot (./shots.js).
+// Wires the Neon Vice editor: layout / grade / size pickers, caption
+// fields, six photo slots with zoom and pan (sliders, drag, wheel),
+// slot selection by clicking the preview, and PNG export.
+// A `?shot=` query loads a fixed scene for a screenshot (./shots.js).
 
-import { drawCover, panelRectsPx, SIZES } from './cover.js';
+import { renderCover, slotBoxesPx, EXPORT_SIZES, SLOT_NAMES, SAMPLE_ORDER } from './cover.js';
 import { runShot } from './shots.js';
 
-const canvas = document.getElementById('cover');
-const titleInput = document.getElementById('title');
-const subtitleInput = document.getElementById('subtitle');
-const status = document.getElementById('status');
-const zoomInput = document.getElementById('zoom');
-const panXInput = document.getElementById('panX');
-const panYInput = document.getElementById('panY');
-const fileInput = document.getElementById('photoFile');
-const panelList = document.getElementById('panelList');
+const $ = (id) => document.getElementById(id);
+const canvas = $('poster');
+const headlineInput = $('headline');
+const taglineInput = $('tagline');
+const notice = $('notice');
+const zoomSlider = $('zoomSlider');
+const panXSlider = $('panXSlider');
+const panYSlider = $('panYSlider');
+const picker = $('filePicker');
+const chipRow = $('slotChips');
 
-const state = {
-  layout: 'hero',
-  grade: 'sunset',
-  size: 'square',
-  title: titleInput.value,
-  subtitle: subtitleInput.value,
-  panels: [0, 1, 2, 3].map(() => ({ img: null, zoom: 1, panX: 0, panY: 0 })),
+const blankSlot = () => ({ photo: null, zoom: 1, panX: 0, panY: 0 });
+const scene = {
+  layout: 'classic',
+  grade: 'vice',
+  size: 'portrait',
+  title: headlineInput.value,
+  subtitle: taglineInput.value,
+  slots: Array.from({ length: 6 }, blankSlot),
 };
-let selected = 0;
+let active = 0;
 
-function redraw() {
-  drawCover(canvas, state);
-  syncPanelChips();
+function paint() {
+  renderCover(canvas, scene);
+  refreshChips();
 }
 
-function syncPanelChips() {
-  [...panelList.children].forEach((chip, i) => {
-    chip.classList.toggle('on', i === selected);
-    chip.classList.toggle('empty', !state.panels[i].img);
+function refreshChips() {
+  [...chipRow.children].forEach((chip, i) => {
+    chip.classList.toggle('picked', i === active);
+    chip.classList.toggle('blank', !scene.slots[i].photo);
   });
-  const p = state.panels[selected];
-  zoomInput.value = String(p.zoom);
-  panXInput.value = String(p.panX);
-  panYInput.value = String(p.panY);
+  const slot = scene.slots[active];
+  zoomSlider.value = String(slot.zoom);
+  panXSlider.value = String(slot.panX);
+  panYSlider.value = String(slot.panY);
 }
 
 /** Loads an image from a URL, resolving once it can be drawn. */
@@ -52,154 +54,168 @@ export function loadImage(url) {
   });
 }
 
-function selectPanel(i) {
-  selected = i;
-  syncPanelChips();
+function pickSlot(i) {
+  active = i;
+  refreshChips();
 }
 
-function buildPanelChips() {
-  panelList.textContent = '';
-  ['Hero', 'Panel 2', 'Panel 3', 'Panel 4'].forEach((label, i) => {
+function buildChips() {
+  chipRow.textContent = '';
+  SLOT_NAMES.forEach((label, i) => {
     const chip = document.createElement('button');
     chip.type = 'button';
-    chip.className = 'panel-chip empty';
-    chip.innerHTML = `<span class="dot"></span>${label}`;
-    chip.addEventListener('click', () => selectPanel(i));
-    panelList.appendChild(chip);
+    chip.className = 'slot-chip blank';
+    chip.innerHTML = `<span class="swatch"></span>${label}`;
+    chip.addEventListener('click', () => pickSlot(i));
+    chipRow.appendChild(chip);
   });
 }
 
-function wireSegment(id, key) {
-  const seg = document.getElementById(id);
-  seg.addEventListener('click', (e) => {
-    const btn = e.target.closest('button');
+function wirePicker(id, key) {
+  const group = $(id);
+  group.addEventListener('click', (event) => {
+    const btn = event.target.closest('button');
     if (!btn) return;
-    [...seg.children].forEach((b) => b.classList.toggle('on', b === btn));
-    state[key] = btn.dataset[key];
+    [...group.children].forEach((b) => b.classList.toggle('on', b === btn));
+    scene[key] = btn.dataset[key];
     if (key === 'size') {
-      const { w, h } = SIZES[state.size];
+      const [w, h] = EXPORT_SIZES[scene.size];
       canvas.width = w;
       canvas.height = h;
     }
-    redraw();
+    paint();
   });
 }
 
-wireSegment('layoutSeg', 'layout');
-wireSegment('gradeSeg', 'grade');
-wireSegment('sizeSeg', 'size');
-titleInput.addEventListener('input', () => { state.title = titleInput.value; redraw(); });
-subtitleInput.addEventListener('input', () => { state.subtitle = subtitleInput.value; redraw(); });
-zoomInput.addEventListener('input', () => { state.panels[selected].zoom = Number(zoomInput.value); redraw(); });
-panXInput.addEventListener('input', () => { state.panels[selected].panX = Number(panXInput.value); redraw(); });
-panYInput.addEventListener('input', () => { state.panels[selected].panY = Number(panYInput.value); redraw(); });
+wirePicker('layoutPicker', 'layout');
+wirePicker('gradePicker', 'grade');
+wirePicker('sizePicker', 'size');
+headlineInput.addEventListener('input', () => { scene.title = headlineInput.value; paint(); });
+taglineInput.addEventListener('input', () => { scene.subtitle = taglineInput.value; paint(); });
+zoomSlider.addEventListener('input', () => { scene.slots[active].zoom = Number(zoomSlider.value); paint(); });
+panXSlider.addEventListener('input', () => { scene.slots[active].panX = Number(panXSlider.value); paint(); });
+panYSlider.addEventListener('input', () => { scene.slots[active].panY = Number(panYSlider.value); paint(); });
 
-document.getElementById('loadPhoto').addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', async (e) => {
-  const file = e.target.files[0];
+$('loadBtn').addEventListener('click', () => picker.click());
+picker.addEventListener('change', async (event) => {
+  const file = event.target.files[0];
   if (!file) return;
-  state.panels[selected].img = await loadImage(URL.createObjectURL(file));
-  state.panels[selected].zoom = 1;
-  state.panels[selected].panX = 0;
-  state.panels[selected].panY = 0;
-  fileInput.value = '';
-  status.textContent = `Photo loaded into panel ${selected + 1}.`;
-  redraw();
+  const slot = scene.slots[active];
+  slot.photo = await loadImage(URL.createObjectURL(file));
+  slot.zoom = 1;
+  slot.panX = 0;
+  slot.panY = 0;
+  picker.value = '';
+  notice.textContent = `Photo loaded into the ${SLOT_NAMES[active]} slot.`;
+  paint();
 });
 
-document.getElementById('fillAll').addEventListener('click', () => {
-  const img = state.panels[selected].img;
-  if (!img) { status.textContent = 'Load a photo into the selected panel first.'; return; }
-  state.panels.forEach((p) => { p.img = img; });
-  status.textContent = 'Same photo in every panel.';
-  redraw();
+$('repeatBtn').addEventListener('click', () => {
+  const photo = scene.slots[active].photo;
+  if (!photo) { notice.textContent = 'Load a photo into the active slot first.'; return; }
+  scene.slots.forEach((slot) => { slot.photo = photo; });
+  notice.textContent = 'Same photo in every slot.';
+  paint();
 });
 
-document.getElementById('sampleBtn').addEventListener('click', async () => {
-  const boulevard = await loadImage('samples/boulevard.jpg');
-  const pier = await loadImage('samples/pier.jpg');
-  state.panels[0].img = pier;
-  state.panels[1].img = boulevard;
-  state.panels[2].img = pier;
-  state.panels[3].img = boulevard;
-  status.textContent = 'Sample photos loaded.';
-  redraw();
+$('samplesBtn').addEventListener('click', async () => {
+  const images = await Promise.all(
+    SAMPLE_ORDER.map((name) => loadImage(`samples/${name}.jpg`)),
+  );
+  images.forEach((photo, i) => {
+    scene.slots[i].photo = photo;
+    scene.slots[i].zoom = 1;
+    scene.slots[i].panX = 0;
+    scene.slots[i].panY = 0;
+  });
+  notice.textContent = 'Sample photos loaded.';
+  paint();
 });
 
-// Click a panel in the preview to select it; drag inside it to pan its photo.
-let dragging = null;
-function canvasPoint(e) {
+// Click a slot in the preview to pick it; drag inside it to pan its photo.
+let drag = null;
+function toCanvas(event) {
   const rect = canvas.getBoundingClientRect();
   return {
-    x: ((e.clientX - rect.left) / rect.width) * canvas.width,
-    y: ((e.clientY - rect.top) / rect.height) * canvas.height,
+    x: ((event.clientX - rect.left) / rect.width) * canvas.width,
+    y: ((event.clientY - rect.top) / rect.height) * canvas.height,
   };
 }
-canvas.addEventListener('pointerdown', (e) => {
-  const p = canvasPoint(e);
-  const rects = panelRectsPx(canvas, state.layout);
-  const i = rects.findIndex((r) => p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h);
+canvas.addEventListener('pointerdown', (event) => {
+  const point = toCanvas(event);
+  const boxes = slotBoxesPx(canvas, scene.layout);
+  const i = boxes.findIndex(
+    (b) => point.x >= b.x && point.x < b.x + b.w && point.y >= b.y && point.y < b.y + b.h,
+  );
   if (i === -1) return;
-  selectPanel(i);
-  dragging = { start: p, panX: state.panels[i].panX, panY: state.panels[i].panY, rect: rects[i] };
-  canvas.setPointerCapture(e.pointerId);
+  pickSlot(i);
+  drag = {
+    from: point,
+    panX: scene.slots[i].panX,
+    panY: scene.slots[i].panY,
+    box: boxes[i],
+  };
+  canvas.setPointerCapture(event.pointerId);
 });
-canvas.addEventListener('pointermove', (e) => {
-  if (!dragging) return;
-  const p = canvasPoint(e);
-  const panel = state.panels[selected];
-  panel.panX = dragging.panX + (p.x - dragging.start.x) / dragging.rect.w;
-  panel.panY = dragging.panY + (p.y - dragging.start.y) / dragging.rect.h;
-  redraw();
+canvas.addEventListener('pointermove', (event) => {
+  if (!drag) return;
+  const point = toCanvas(event);
+  const slot = scene.slots[active];
+  slot.panX = drag.panX + (point.x - drag.from.x) / drag.box.w;
+  slot.panY = drag.panY + (point.y - drag.from.y) / drag.box.h;
+  paint();
 });
-canvas.addEventListener('pointerup', () => { dragging = null; });
-canvas.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const panel = state.panels[selected];
-  panel.zoom = Math.min(2.5, Math.max(1, panel.zoom - e.deltaY * 0.001));
-  redraw();
+canvas.addEventListener('pointerup', () => { drag = null; });
+canvas.addEventListener('wheel', (event) => {
+  event.preventDefault();
+  const slot = scene.slots[active];
+  slot.zoom = Math.min(2.5, Math.max(1, slot.zoom - event.deltaY * 0.001));
+  paint();
 }, { passive: false });
 
-document.getElementById('export').addEventListener('click', () => {
-  const { w, h } = SIZES[state.size];
+$('exportBtn').addEventListener('click', () => {
+  const [w, h] = EXPORT_SIZES[scene.size];
   const off = document.createElement('canvas');
   off.width = w;
   off.height = h;
-  drawCover(off, state);
+  renderCover(off, scene);
   off.toBlob((blob) => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `neon-palms-${w}x${h}.png`;
+    a.download = `neon-vice-${w}x${h}.png`;
     a.click();
-    status.textContent = `Saved neon-palms-${w}x${h}.png`;
+    notice.textContent = `Saved neon-vice-${w}x${h}.png`;
   }, 'image/png');
 });
 
-buildPanelChips();
+buildChips();
 
-const query = new URLSearchParams(location.search);
-const shot = query.get('shot');
+const params = new URLSearchParams(location.search);
+const shot = params.get('shot');
 if (shot) {
-  runShot(shot, query, {
+  runShot(shot, params, {
     loadImage,
-    apply(scene) {
-      state.layout = scene.layout;
-      state.grade = scene.grade;
-      state.size = scene.size;
-      state.title = scene.title;
-      state.subtitle = scene.subtitle;
-      titleInput.value = scene.title;
-      subtitleInput.value = scene.subtitle;
-      const { w, h } = SIZES[state.size];
+    apply(next) {
+      scene.layout = next.layout;
+      scene.grade = next.grade;
+      scene.size = next.size;
+      scene.title = next.title;
+      scene.subtitle = next.subtitle;
+      headlineInput.value = next.title;
+      taglineInput.value = next.subtitle;
+      const [w, h] = EXPORT_SIZES[scene.size];
       canvas.width = w;
       canvas.height = h;
-      state.panels = scene.panels;
-      document.querySelectorAll('#layoutSeg button').forEach((b) => b.classList.toggle('on', b.dataset.layout === scene.layout));
-      document.querySelectorAll('#gradeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.grade === scene.grade));
-      document.querySelectorAll('#sizeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.size === scene.size));
-      redraw();
+      scene.slots = next.slots;
+      document.querySelectorAll('#layoutPicker button').forEach(
+        (b) => b.classList.toggle('on', b.dataset.layout === next.layout));
+      document.querySelectorAll('#gradePicker button').forEach(
+        (b) => b.classList.toggle('on', b.dataset.grade === next.grade));
+      document.querySelectorAll('#sizePicker button').forEach(
+        (b) => b.classList.toggle('on', b.dataset.size === next.size));
+      paint();
     },
   });
 } else {
-  redraw();
+  paint();
 }

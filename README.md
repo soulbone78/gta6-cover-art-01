@@ -1,15 +1,17 @@
-# Neon Palms — Sunset Cover Maker
+[![make.fun · gta6-cover-art-01](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
+[![rank](https://make.fun/badge/gta6-cover-art-01/soulbone78/gta6-cover-art-01/rank.svg)](https://make.fun/bounty/gta6-cover-art-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
+[![reward](https://make.fun/badge/gta6-cover-art-01/soulbone78/gta6-cover-art-01/reward.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
 
-[![make.fun bounty](https://img.shields.io/badge/make.fun-bounty-ff2e88)](https://make.fun/bounty/gta6-cover-art-01)
+# Neon Vice — Classic Cover Maker
 
-Turn your photos into a multi-panel sunset cover, in the style of a Vice City poster — drawn entirely by this app, with no game art, no logos and no outside files.
+Build a Vice City poster from your own photos: six panels in the classic GTA grid — a tall hero shot, four vignettes and a skyline band — with bold outlined lettering and a warm sunset grade. Everything is drawn by this app, with no game art, no logos and no outside files.
 
 ## What it does
 
-- **Any photo:** load your own photos from your machine into four panels — one photo per panel, or the same photo in every panel. Click a panel in the preview to select it, then zoom and pan it with the sliders, by dragging, or with the scroll wheel.
-- **Multi-panel layouts:** Hero + strip, Grid 2×2, or Split — pick the one that fits your shots.
-- **Bold caption lettering:** an editable title and subtitle, drawn as big outlined gradient capitals over a shaded band.
-- **Sunset colour grades:** Sunset, Neon and Dusk — each with its own overlay tint, retro striped sun, palm silhouettes and caption colours, all drawn on canvas.
+- **Your photos, six slots:** load a photo from your machine into any of the six slots — one photo per slot, or the same photo everywhere. Click a slot in the preview to pick it, then zoom and pan with the sliders, by dragging, or with the scroll wheel.
+- **Three poster grids:** Classic 6-panel (hero + vignettes + skyline band), Grid 3×2, or Hero + strip — switch any time and the photos follow.
+- **Bold caption lettering:** an editable headline and tagline, drawn as big outlined gradient capitals with an accent rule, over a shaded band.
+- **Sunset colour grades:** Vice, Neon and Dusk — each with its own panel wash, caption colours and gutter, all drawn on canvas.
 - **Fast and easy:** pick photos, type a caption, export a PNG in 1080×1080, 1080×1350 or 1920×1080.
 
 ## Run it
@@ -24,10 +26,10 @@ Then open http://localhost:8080 in desktop Chrome. The app is plain static files
 
 - `app/index.html` — the editor page
 - `app/style.css` — the editor's look
-- `app/src/main.js` — wiring: controls, panel selection, drag-to-pan, export
-- `app/src/cover.js` — the cover renderer: layouts, grades, sun, palms, caption
+- `app/src/main.js` — wiring: pickers, caption fields, slot selection, drag-to-pan, export
+- `app/src/cover.js` — the cover painter: grids, grades, caption lettering
 - `app/src/shots.js` — fixed scenes used to take the screenshots
-- `app/samples/` — two sample photos, made with an image model for make.fun and free to use
+- `app/samples/` — six sample photos, made with an image model for make.fun and free to use
 - `main.ts` — hands the app in: copies `app/` and `screenshots/` to `/output` and writes `dossier.json`
 - `screenshots/` — screenshots taken with headless Chromium
 
