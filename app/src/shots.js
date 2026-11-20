@@ -1,22 +1,29 @@
-// Fixed scenes for screenshots: ?shot=cover shows the cover alone at its
-// export size; ?shot=editor shows the editor with sample photos loaded.
-// Query params: layout, grade, size, title, subtitle, photo (sample name).
-// window.__shotReady is set once painted.
+// Screenshot scenes: with ?shot=cover the page shows just the cover at its
+// export size; with ?shot=editor it shows the editor with samples in place.
+// The query carries layout, grade, size, title, subtitle, photos (a comma
+// list of sample names, one per panel) and panx / pany (comma lists, one
+// value per panel). The page raises window.__shotReady once it has painted.
 
-/** Loads the two sample photos and builds a four-panel state from a scene. */
-export async function runShot(shot, query, api) {
-  const layout = query.get('layout') ?? 'hero';
-  const grade = query.get('grade') ?? 'sunset';
-  const size = query.get('size') ?? 'wide';
-  const title = query.get('title') ?? 'Vice Nights';
-  const subtitle = query.get('subtitle') ?? 'One city. One last score.';
-  const photoA = await api.loadImage(`samples/${query.get('photo') ?? 'pier'}.jpg`);
-  const photoB = await api.loadImage(`samples/${query.get('photo2') ?? 'boulevard'}.jpg`);
-  // Optional per-panel vertical pan (comma list, one value per panel, empty = 0),
-  // e.g. pany=0.9,0.44,0,0.44. Positive panY shifts the photo down so a face
-  // near the top of the source photo stays inside a short/wide panel.
-  const panY = (query.get('pany') ?? '').split(',').map((v) => Number(v) || 0);
-  const panels = [photoA, photoB, photoA, photoB].map((img, i) => ({ img, zoom: 1, panX: 0, panY: panY[i] ?? 0 }));
+/** The default six samples, in classic-grid order. */
+const DEFAULT_PHOTOS = ['duo', 'neon', 'boat', 'boulevard', 'pier', 'heli'];
+
+/** Splits a comma param into numbers, missing entries becoming 0. */
+function numberList(value) {
+  return (value ?? '').split(',').map((v) => Number(v) || 0);
+}
+
+/** Loads the scene's sample photos and hands the finished scene to the editor. */
+export async function setupScene(shot, query, api) {
+  const layout = query.get('layout') ?? 'classic';
+  const grade = query.get('grade') ?? 'vice';
+  const size = query.get('size') ?? 'portrait';
+  const title = query.get('title') ?? 'Vice City';
+  const subtitle = query.get('subtitle') ?? 'Every sunset has a price.';
+  const names = query.get('photos') ? query.get('photos').split(',') : DEFAULT_PHOTOS;
+  const panX = numberList(query.get('panx'));
+  const panY = numberList(query.get('pany'));
+  const pics = await Promise.all(names.map((name) => api.loadPic(`samples/${name}.jpg`)));
+  const panels = pics.map((img, i) => ({ img, zoom: 1, panX: panX[i] ?? 0, panY: panY[i] ?? 0 }));
   if (shot === 'cover') document.body.classList.add('shot-cover');
   api.apply({ layout, grade, size, title, subtitle, panels });
   requestAnimationFrame(() => requestAnimationFrame(() => { window.__shotReady = true; }));

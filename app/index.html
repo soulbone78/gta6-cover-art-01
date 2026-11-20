@@ -3,28 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Neon Palms — Sunset Cover Maker</title>
+<title>Neon Vice — Classic Cover Maker</title>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <main class="app">
-  <section class="controls" aria-label="Cover controls">
-    <h1>Neon Palms</h1>
-    <p class="tagline">Turn your photos into a multi-panel sunset cover.</p>
+  <aside class="controls" aria-label="Cover controls">
+    <h1>Neon Vice</h1>
+    <p class="tagline">Six panels, one sunset, your story — a GTA-style cover from your own photos.</p>
 
     <div class="group">
       <span class="group-label">Layout</span>
-      <div class="seg" id="layoutSeg" role="group" aria-label="Layout">
-        <button type="button" data-layout="hero" class="on">Hero + strip</button>
-        <button type="button" data-layout="grid">Grid 2 &times; 2</button>
+      <div class="bar" id="layoutBar" role="group" aria-label="Layout">
+        <button type="button" data-layout="classic" class="on">Classic 6-panel</button>
+        <button type="button" data-layout="hero">Hero + strip</button>
+        <button type="button" data-layout="grid">Grid 3 &times; 2</button>
         <button type="button" data-layout="split">Split</button>
       </div>
     </div>
 
     <div class="group">
       <span class="group-label">Colour grade</span>
-      <div class="seg" id="gradeSeg" role="group" aria-label="Colour grade">
-        <button type="button" data-grade="sunset" class="on">Sunset</button>
+      <div class="bar" id="gradeBar" role="group" aria-label="Colour grade">
+        <button type="button" data-grade="vice" class="on">Vice</button>
+        <button type="button" data-grade="sunset">Sunset</button>
         <button type="button" data-grade="neon">Neon</button>
         <button type="button" data-grade="dusk">Dusk</button>
       </div>
@@ -32,9 +34,9 @@
 
     <div class="group">
       <span class="group-label">Export size</span>
-      <div class="seg" id="sizeSeg" role="group" aria-label="Export size">
-        <button type="button" data-size="square" class="on">1080 &times; 1080</button>
-        <button type="button" data-size="portrait">1080 &times; 1350</button>
+      <div class="bar" id="sizeBar" role="group" aria-label="Export size">
+        <button type="button" data-size="square">1080 &times; 1080</button>
+        <button type="button" data-size="portrait" class="on">1080 &times; 1350</button>
         <button type="button" data-size="wide">1920 &times; 1080</button>
       </div>
     </div>
@@ -42,45 +44,45 @@
     <div class="group">
       <span class="group-label">Caption</span>
       <label class="field">Title
-        <input id="title" type="text" maxlength="28" value="Vice Nights">
+        <input id="titleText" type="text" maxlength="28" value="Vice City">
       </label>
       <label class="field">Subtitle
-        <input id="subtitle" type="text" maxlength="48" value="One city. One last score.">
+        <input id="subtitleText" type="text" maxlength="48" value="Every sunset has a price.">
       </label>
     </div>
 
     <div class="group">
       <span class="group-label">Panels — click a panel in the preview, then load a photo</span>
-      <div class="panels" id="panelList"></div>
+      <div class="chips" id="chipRow"></div>
       <div class="row">
-        <button id="loadPhoto" type="button">Load photo into selected panel</button>
-        <input id="photoFile" type="file" accept="image/*" hidden>
+        <button id="loadBtn" type="button">Load photo into selected panel</button>
+        <input id="photoPicker" type="file" accept="image/*" hidden>
       </div>
       <div class="row">
-        <button id="fillAll" type="button">Use this photo in every panel</button>
+        <button id="fillBtn" type="button">Use this photo in every panel</button>
         <button id="sampleBtn" type="button">Fill with samples</button>
       </div>
       <label class="field">Zoom
-        <input id="zoom" type="range" min="1" max="2.5" step="0.01" value="1">
+        <input id="zoomRange" type="range" min="1" max="2.5" step="0.01" value="1">
       </label>
       <div class="row">
         <label class="field grow">Pan X
-          <input id="panX" type="range" min="-0.5" max="0.5" step="0.01" value="0">
+          <input id="panXRange" type="range" min="-0.5" max="0.5" step="0.01" value="0">
         </label>
         <label class="field grow">Pan Y
-          <input id="panY" type="range" min="-0.5" max="0.5" step="0.01" value="0">
+          <input id="panYRange" type="range" min="-0.5" max="0.5" step="0.01" value="0">
         </label>
       </div>
       <p class="hint">Tip: drag a photo inside the preview to move it, scroll over it to zoom.</p>
     </div>
 
-    <button id="export" type="button" class="primary">Export PNG</button>
-    <p id="status" role="status"></p>
-  </section>
+    <button id="exportBtn" type="button" class="primary">Export PNG</button>
+    <p id="notice" role="status"></p>
+  </aside>
 
-  <section class="preview" aria-label="Cover preview">
-    <canvas id="cover" width="1080" height="1080" aria-label="The cover"></canvas>
-    <p class="preview-note">Live preview — click a panel to select it.</p>
+  <section class="stage" aria-label="Cover preview">
+    <canvas id="cover" width="1080" height="1350" aria-label="The cover"></canvas>
+    <p class="stage-note">Live preview — click a panel to select it.</p>
   </section>
 </main>
 <script type="module" src="./src/main.js"></script>
