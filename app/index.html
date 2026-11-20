@@ -3,19 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Neon Palms — Sunset Cover Maker</title>
+<title>Neon Vice — GTA-style Cover Maker</title>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <main class="app">
   <section class="controls" aria-label="Cover controls">
-    <h1>Neon Palms</h1>
-    <p class="tagline">Turn your photos into a multi-panel sunset cover.</p>
+    <h1>Neon Vice</h1>
+    <p class="tagline">Turn your photos into a classic multi-panel Vice City cover.</p>
 
     <div class="group">
       <span class="group-label">Layout</span>
       <div class="seg" id="layoutSeg" role="group" aria-label="Layout">
-        <button type="button" data-layout="hero" class="on">Hero + strip</button>
+        <button type="button" data-layout="classic" class="on">Classic 6-panel</button>
+        <button type="button" data-layout="hero">Hero + strip</button>
         <button type="button" data-layout="grid">Grid 2 &times; 2</button>
         <button type="button" data-layout="split">Split</button>
       </div>
@@ -27,14 +28,15 @@
         <button type="button" data-grade="sunset" class="on">Sunset</button>
         <button type="button" data-grade="neon">Neon</button>
         <button type="button" data-grade="dusk">Dusk</button>
+        <button type="button" data-grade="vice">Vice</button>
       </div>
     </div>
 
     <div class="group">
       <span class="group-label">Export size</span>
       <div class="seg" id="sizeSeg" role="group" aria-label="Export size">
-        <button type="button" data-size="square" class="on">1080 &times; 1080</button>
-        <button type="button" data-size="portrait">1080 &times; 1350</button>
+        <button type="button" data-size="square">1080 &times; 1080</button>
+        <button type="button" data-size="portrait" class="on">1080 &times; 1350</button>
         <button type="button" data-size="wide">1920 &times; 1080</button>
       </div>
     </div>
@@ -42,10 +44,10 @@
     <div class="group">
       <span class="group-label">Caption</span>
       <label class="field">Title
-        <input id="title" type="text" maxlength="28" value="Vice Nights">
+        <input id="title" type="text" maxlength="28" value="Vice City">
       </label>
       <label class="field">Subtitle
-        <input id="subtitle" type="text" maxlength="48" value="One city. One last score.">
+        <input id="subtitle" type="text" maxlength="48" value="Every sunset has a price.">
       </label>
     </div>
 
@@ -79,7 +81,7 @@
   </section>
 
   <section class="preview" aria-label="Cover preview">
-    <canvas id="cover" width="1080" height="1080" aria-label="The cover"></canvas>
+    <canvas id="cover" width="1080" height="1350" aria-label="The cover"></canvas>
     <p class="preview-note">Live preview — click a panel to select it.</p>
   </section>
 </main>
