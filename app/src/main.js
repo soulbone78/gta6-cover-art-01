@@ -1,10 +1,10 @@
-// Wires the Neon Palms editor: layout / grade / size buttons, caption fields,
+// Wires the Neon Vice editor: layout / grade / size buttons, caption fields,
 // per-panel photo loading with zoom and pan (sliders, drag, wheel), panel
 // selection by clicking the preview, and PNG export at the chosen size.
 // A `?shot=` query sets up a fixed scene for a screenshot (./shots.js).
 
-import { drawCover, panelRectsPx, SIZES } from './cover.js';
-import { runShot } from './shots.js';
+import { drawCover, layoutPanelCount, MAX_PANELS, panelRectsPx, SIZES } from './cover.js';
+import { runShot, SAMPLE_ORDER } from './shots.js';
 
 const canvas = document.getElementById('cover');
 const titleInput = document.getElementById('title');
@@ -17,12 +17,12 @@ const fileInput = document.getElementById('photoFile');
 const panelList = document.getElementById('panelList');
 
 const state = {
-  layout: 'hero',
+  layout: 'classic',
   grade: 'sunset',
-  size: 'square',
+  size: 'portrait',
   title: titleInput.value,
   subtitle: subtitleInput.value,
-  panels: [0, 1, 2, 3].map(() => ({ img: null, zoom: 1, panX: 0, panY: 0 })),
+  panels: Array.from({ length: MAX_PANELS }, () => ({ img: null, zoom: 1, panX: 0, panY: 0 })),
 };
 let selected = 0;
 
@@ -57,16 +57,21 @@ function selectPanel(i) {
   syncPanelChips();
 }
 
+/** One chip per panel the current layout draws; Classic shows six, the rest four. */
 function buildPanelChips() {
+  const count = layoutPanelCount(state.layout);
+  if (selected >= count) selected = 0;
   panelList.textContent = '';
-  ['Hero', 'Panel 2', 'Panel 3', 'Panel 4'].forEach((label, i) => {
+  const labels = ['Hero', 'Panel 2', 'Panel 3', 'Panel 4', 'Panel 5', 'Panel 6'];
+  for (let i = 0; i < count; i++) {
     const chip = document.createElement('button');
     chip.type = 'button';
     chip.className = 'panel-chip empty';
-    chip.innerHTML = `<span class="dot"></span>${label}`;
+    chip.innerHTML = `<span class="dot"></span>${labels[i]}`;
     chip.addEventListener('click', () => selectPanel(i));
     panelList.appendChild(chip);
-  });
+  }
+  syncPanelChips();
 }
 
 function wireSegment(id, key) {
@@ -81,6 +86,7 @@ function wireSegment(id, key) {
       canvas.width = w;
       canvas.height = h;
     }
+    if (key === 'layout') buildPanelChips();
     redraw();
   });
 }
@@ -116,12 +122,8 @@ document.getElementById('fillAll').addEventListener('click', () => {
 });
 
 document.getElementById('sampleBtn').addEventListener('click', async () => {
-  const boulevard = await loadImage('samples/boulevard.jpg');
-  const pier = await loadImage('samples/pier.jpg');
-  state.panels[0].img = pier;
-  state.panels[1].img = boulevard;
-  state.panels[2].img = pier;
-  state.panels[3].img = boulevard;
+  const imgs = await Promise.all(SAMPLE_ORDER.map((name) => loadImage(`samples/${name}.jpg`)));
+  imgs.forEach((img, i) => { state.panels[i].img = img; });
   status.textContent = 'Sample photos loaded.';
   redraw();
 });
@@ -169,9 +171,9 @@ document.getElementById('export').addEventListener('click', () => {
   off.toBlob((blob) => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `neon-palms-${w}x${h}.png`;
+    a.download = `neon-vice-${w}x${h}.png`;
     a.click();
-    status.textContent = `Saved neon-palms-${w}x${h}.png`;
+    status.textContent = `Saved neon-vice-${w}x${h}.png`;
   }, 'image/png');
 });
 
@@ -197,6 +199,7 @@ if (shot) {
       document.querySelectorAll('#layoutSeg button').forEach((b) => b.classList.toggle('on', b.dataset.layout === scene.layout));
       document.querySelectorAll('#gradeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.grade === scene.grade));
       document.querySelectorAll('#sizeSeg button').forEach((b) => b.classList.toggle('on', b.dataset.size === scene.size));
+      buildPanelChips();
       redraw();
     },
   });
